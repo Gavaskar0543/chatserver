@@ -1,0 +1,40 @@
+module.exports.chatSockets = function(socketServer) {
+    let io = require('socket.io')(socketServer);
+    
+    // Object to store socket IDs of users
+    let users = {};
+
+    io.sockets.on('connection', function(socket) {
+        console.log('connection received', socket.id);
+
+        socket.on('disconnect', function() {
+            console.log('socket disconnected');
+            // Remove the disconnected user from the users object
+            for (let key in users) {
+                if (users[key] === socket.id) {
+                    delete users[key];
+                    break;
+                }
+            }
+        });
+
+        socket.on('join', function(username) {
+            // Store the user's socket ID
+            users[username] = socket.id;
+        });
+
+        socket.on('private_message', function(data) {
+            // Extract data
+            const { sender, receiver, message } = data;
+
+            // Check if receiver exists
+            if (users.hasOwnProperty(receiver)) {
+                // If receiver is online, send the message directly to the receiver
+                io.to(users[receiver]).emit('private_message', { sender, message });
+            } else {
+                // If receiver is not online, handle it accordingly (e.g., store in database for later retrieval)
+                console.log(`User ${receiver} is not online. Message could be stored in database.`);
+            }
+        });
+    });
+};
