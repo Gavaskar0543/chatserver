@@ -2,6 +2,7 @@ const express = require('express');
 const { createServer } = require('node:http');
 port = 4000;
 const app = express();
+require('dotenv').config()
 const server = createServer(app);
 const chatSockets = require('./Config/Socket').chatSockets(server);
 const cors = require('cors');
